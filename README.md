@@ -22,7 +22,7 @@ zip -r9 python_requests_layer.zip library
 
 ## Installation
 
-Deploy the CloudFormation template `user-group-subscription-template.yaml` with the S3 bucket having the requestz zip file as input.
+Deploy the CloudFormation template `user-group-subscription-template.yaml` with the S3 bucket having the request zip file as input.
 
 ## Cleanup
 
