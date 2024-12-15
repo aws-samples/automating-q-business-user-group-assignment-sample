@@ -1,11 +1,12 @@
-## My Project
+# Automating Amazon Q Business Subscription Management in AWS IAM Identity Center
 
-TODO: Fill this README out!
+Customers often want automation to assign user and groups to an Amazon Q Business application. Currently there are no APIs that support this operation.
+This solution provides an automation mechanism for the operation using the console APIs.
+# Workflow
 
-Be sure to:
+![Addition of Subscription](user-group-assignment-add.png)
 
-* Change the title in this README
-* Edit your repository description on GitHub
+![Deletion of Subscription](user-group-assignment-delete.png)
 
 ## Security
 
