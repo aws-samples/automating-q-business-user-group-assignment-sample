@@ -1,6 +1,6 @@
 # Automating Amazon Q Business Subscription Management in AWS IAM Identity Center
 
-Customers often want automation to assign user and groups to an Amazon Q Business application. Currently there are no APIs that support this operation.
+Customers often want automation to assign users and groups to an Amazon Q Business application. Currently there are no APIs that support this operation.
 This solution provides an automation mechanism for the operation using the console APIs.
 ## Workflow
 
@@ -8,7 +8,7 @@ This solution provides an automation mechanism for the operation using the conso
 
 ![Deletion of Subscription](user-group-assignment-delete.png)
 
-## Pre-requisites
+## Prerequisites
 Prepare the Python requests module to create a Lambda layer with the steps below.
 
 1. Save the `requests`  Python module to a directory and zip it.
