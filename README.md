@@ -30,11 +30,11 @@ The output from the template will include the API Gateway endpoint. Use the HTTP
 The request body should be a JSON object with the following fields:
 ```json
 {
-    "region": "string",         // AWS region (e.g., "us-east-1")
-    "applicationId": "string",  // Q Business Application Id
-    "assignmentType": "string", // Must be either "GROUP" or "USER"
-    "assignmentId": "string",   // Group ID or User ID from IAM Identity Center
-    "subscriptionType": "string" // Must be either "Q_BUSINESS" or "Q_LITE"
+    "region": " AWS region (e.g., 'us-east-1')"
+    "applicationId": "Q Business Application Id", 
+    "assignmentType": "GROUP|USER", 
+    "assignmentId": " Group ID or User ID from IAM Identity Center",   
+    "subscriptionType": "Q_BUSINESS|Q_LITE"
 }
 
 ````
