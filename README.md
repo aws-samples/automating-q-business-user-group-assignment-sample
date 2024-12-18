@@ -48,7 +48,7 @@ curl -X POST \
   -H "X-Amz-Security-Token: ${AWS_SESSION_TOKEN}" \
   -d '{"region":"{region}","applicationId":"{Amazon Q Business Application Id}","assignmentType":"GROUP|USER","assignmentId":"Group ID|User Id","subscriptionType":"Q_BUSINESS|Q_LITE"}'
 ```
-### DELETE request (Delete Subscription)
+### DELETE Request (Delete Subscription)
 
 The following query parameters must be included in the URL:
 
