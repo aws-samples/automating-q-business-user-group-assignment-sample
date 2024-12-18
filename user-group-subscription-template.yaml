@@ -5,7 +5,7 @@ Resources:
   RequestsLayer:
     Type: AWS::Lambda::LayerVersion
     Properties:
-      LayerName: requests-layer
+      LayerName: !Sub ${AWS::StackName}-requests-layer
       Description: Layer containing requests package and requests-aws4auth
       Content:
         S3Bucket: !Ref LayerBucket
@@ -18,7 +18,6 @@ Resources:
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ${AWS::StackName}-user-group-assignment-role
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -29,7 +28,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-        - PolicyName: QBusinessUserGroupAssignmentPolicy
+        - PolicyName: !Sub ${AWS::StackName}-user-group-assignment-policy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -71,17 +70,12 @@ Resources:
                 Action:
                   - sso-directory:DescribeUser
                   - sso-directory:DescribeGroup
+                  - sso:DescribeInstance
                 Resource: "*"
                 Condition:
                   ForAnyValue:StringEquals:
                     aws:CalledVia:
                       - user-subscriptions.amazonaws.com
-              
-              - Effect: Allow
-                Action:
-                  - sso:DescribeInstance
-                Resource: !Sub arn:aws:sso:${AWS::Region}:${AWS::AccountId}:instance/*
-
   QBusinessUserGroupAssignmentFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -110,6 +104,72 @@ Resources:
           ssoclient = session.client('sso-admin')
 
           def lambda_handler(event, context):
+
+            try:
+                # Extract HTTP method
+                http_method = event['httpMethod']
+                
+                # Parse body for POST requests
+                body = {}
+                if http_method == 'POST' and 'body' in event:
+                    body = json.loads(event['body'])
+                    
+                # Extract query parameters for DELETE requests
+                query_params = event.get('queryStringParameters', {}) or {}
+                
+                if http_method == 'POST':
+                    # Map to ADD action
+                    payload = {
+                        'action': 'ADD',
+                        'region': body.get('region'),
+                        'applicationId': body.get('applicationId'),
+                        'assignmentType': body.get('assignmentType'),
+                        'assignmentId': body.get('assignmentId'),
+                        'subscriptionType': body.get('subscriptionType')
+                    }
+                elif http_method == 'DELETE':
+                    # Map to DELETE action
+                    payload = {
+                        'action': 'DELETE',
+                        'region': query_params.get('region'),
+                        'applicationId': query_params.get('applicationId'),
+                        'assignmentType': query_params.get('assignmentType'),
+                        'assignmentId': query_params.get('assignmentId')
+                    }
+                else:
+                    return {
+                        'statusCode': 400,
+                        'body': json.dumps({
+                            'error': 'Unsupported HTTP method'
+                        })
+                    }
+                
+                result = process_request(payload, context)
+                
+                # Return API Gateway response
+                return {
+                    'statusCode': result['statusCode'],
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': result['body']
+                }
+                
+            except Exception as e:
+                return {
+                    'statusCode': 500,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': json.dumps({
+                        'error': str(e)
+                    })
+                }
+
+
+          def process_request(event, context):
               try:
                   # Extract parameters from the event
                   region = event.get('region')
@@ -189,7 +249,7 @@ Resources:
                           assignmentId
                       )
                       
-                      result = "Application assignment deleted successfully"
+                      result = "{status:'Application assignment deleted successfully'}"
                       logger.info(result)
                   
                   return {
@@ -255,7 +315,7 @@ Resources:
 
               response = make_qbusiness_request(region, 'POST', endpoint, payload)
               logger.info(f"Subscription created successfully: {response}")
-              return response["subscriptionId"]
+              return f"subscriptionId:{response['subscriptionId']}"
 
           def make_qbusiness_request(region, method, endpoint, payload=None):
               headers = {
@@ -293,6 +353,77 @@ Resources:
         Variables:
           ENVIRONMENT: prod
 
+  # API Gateway
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub ${AWS::StackName}-subscription-api
+      Description: API for managing Q Business subscriptions
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  # API Resource for /subscription
+  SubscriptionResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: subscription
+
+  # POST Method for adding subscriptions
+  SubscriptionPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref SubscriptionResource
+      HttpMethod: POST
+      AuthorizationType: AWS_IAM
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${QBusinessUserGroupAssignmentFunction.Arn}/invocations
+
+  # DELETE Method for removing subscriptions
+  SubscriptionDeleteMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref SubscriptionResource
+      HttpMethod: DELETE
+      AuthorizationType: AWS_IAM
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${QBusinessUserGroupAssignmentFunction.Arn}/invocations
+
+  # API Deployment
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - SubscriptionPostMethod
+      - SubscriptionDeleteMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+
+  # API Stage
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref ApiGateway
+      DeploymentId: !Ref ApiDeployment
+      StageName: prod
+
+  # Lambda Permission for API Gateway
+  LambdaApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref QBusinessUserGroupAssignmentFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*
+
+
 Parameters:
   LayerBucket:
     Type: String
@@ -302,10 +433,6 @@ Parameters:
     Description: S3 key for the Lambda layer zip file  
     
 Outputs:
-  LambdaFunctionArn:
-    Description: ARN of the Lambda function
-    Value: !GetAtt QBusinessUserGroupAssignmentFunction.Arn
-  
-  LambdaRoleArn:
-    Description: ARN of the Lambda execution role
-    Value: !GetAtt LambdaExecutionRole.Arn
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/subscription

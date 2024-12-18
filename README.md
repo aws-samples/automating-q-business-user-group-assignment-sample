@@ -24,6 +24,29 @@ zip -r9 python_requests_layer.zip library
 
 Deploy the CloudFormation template `user-group-subscription-template.yaml` with the S3 bucket having the request zip file as input.
 
+The output from the template will include the API Gateway endpoint. Use the HTTPS endpoint to make POST calls to Add a subscription and DELETE to Delete a subscription.
+E.g.
+
+```
+curl -X POST \
+  'API_END_POINT \
+  -H "Content-Type: application/json" \
+  --aws-sigv4 "aws:amz:us-east-1:execute-api" \
+  --user "${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}" \
+  -H "X-Amz-Security-Token: ${AWS_SESSION_TOKEN}" \
+  -d '{"region":"{region}","applicationId":"{Q Business Application Id}","assignmentType":"GROUP|USER","assignmentId":"Group ID|User Id","subscriptionType":"Q_BUSINESS|Q_LITE"}'
+```
+
+```
+
+curl -X DELETE \
+  'API_END_POINT?region={region}&applicationId={Q Business Application Id}&assignmentType=GROUP|USER&assignmentId=Group ID|User Id' \
+  --aws-sigv4 "aws:amz:us-east-1:execute-api" \
+  --user "${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}" \
+  -H "X-Amz-Security-Token: ${AWS_SESSION_TOKEN}"
+
+```
+
 ## Cleanup
 
 1. Delete the CloudFormation template.
