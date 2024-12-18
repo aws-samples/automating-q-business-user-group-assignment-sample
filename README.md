@@ -25,8 +25,20 @@ zip -r9 python_requests_layer.zip library
 Deploy the CloudFormation template `user-group-subscription-template.yaml` with the S3 bucket having the request zip file as input.
 
 The output from the template will include the API Gateway endpoint. Use the HTTPS endpoint to make POST calls to Add a subscription and DELETE to Delete a subscription.
-E.g.
 
+### POST Request (Add Subscription)
+The request body should be a JSON object with the following fields:
+```json
+{
+    "region": "string",         // AWS region (e.g., "us-east-1")
+    "applicationId": "string",  // Q Business Application Id
+    "assignmentType": "string", // Must be either "GROUP" or "USER"
+    "assignmentId": "string",   // Group ID or User ID from IAM Identity Center
+    "subscriptionType": "string" // Must be either "Q_BUSINESS" or "Q_LITE"
+}
+
+````
+E.g. 
 ```
 curl -X POST \
   'API_END_POINT \
@@ -36,7 +48,21 @@ curl -X POST \
   -H "X-Amz-Security-Token: ${AWS_SESSION_TOKEN}" \
   -d '{"region":"{region}","applicationId":"{Q Business Application Id}","assignmentType":"GROUP|USER","assignmentId":"Group ID|User Id","subscriptionType":"Q_BUSINESS|Q_LITE"}'
 ```
+### DELETE request (Delete Subscription)
 
+The following query parameters must be included in the URL:
+
+```
+region: AWS region (e.g., "us-east-1")
+
+applicationId: Q Business Application Id
+
+assignmentType: Must be either "GROUP" or "USER"
+
+assignmentId: Group ID or User ID from IAM Identity Center
+```
+
+E.g.
 ```
 
 curl -X DELETE \
