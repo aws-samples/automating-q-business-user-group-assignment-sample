@@ -57,7 +57,7 @@ region: AWS region (e.g., "us-east-1")
 
 applicationId: Amazon Q Business Application Id
 
-assignmentType: Must be either "GROUP" or "USER"
+assignmentType: GROUP | USER
 
 assignmentId: Group ID or User ID from AWS IAM Identity Center
 ```
