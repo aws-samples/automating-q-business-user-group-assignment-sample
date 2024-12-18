@@ -31,9 +31,9 @@ The request body should be a JSON object with the following fields:
 ```json
 {
     "region": " AWS region (e.g., 'us-east-1')"
-    "applicationId": "Q Business Application Id", 
+    "applicationId": "Amazon Q Business Application Id", 
     "assignmentType": "GROUP|USER", 
-    "assignmentId": " Group ID or User ID from IAM Identity Center",   
+    "assignmentId": " Group ID or User ID from AWS IAM Identity Center",   
     "subscriptionType": "Q_BUSINESS|Q_LITE"
 }
 
@@ -46,7 +46,7 @@ curl -X POST \
   --aws-sigv4 "aws:amz:us-east-1:execute-api" \
   --user "${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}" \
   -H "X-Amz-Security-Token: ${AWS_SESSION_TOKEN}" \
-  -d '{"region":"{region}","applicationId":"{Q Business Application Id}","assignmentType":"GROUP|USER","assignmentId":"Group ID|User Id","subscriptionType":"Q_BUSINESS|Q_LITE"}'
+  -d '{"region":"{region}","applicationId":"{Amazon Q Business Application Id}","assignmentType":"GROUP|USER","assignmentId":"Group ID|User Id","subscriptionType":"Q_BUSINESS|Q_LITE"}'
 ```
 ### DELETE request (Delete Subscription)
 
@@ -55,11 +55,11 @@ The following query parameters must be included in the URL:
 ```
 region: AWS region (e.g., "us-east-1")
 
-applicationId: Q Business Application Id
+applicationId: Amazon Q Business Application Id
 
 assignmentType: Must be either "GROUP" or "USER"
 
-assignmentId: Group ID or User ID from IAM Identity Center
+assignmentId: Group ID or User ID from AWS IAM Identity Center
 ```
 
 E.g.
