@@ -14,9 +14,9 @@ Prepare the Python requests module to create a Lambda layer with the steps below
 1. Save the `requests`  Python module to a directory and zip it.
 
 ```
-mkdir library
-pip install -t library requests
-zip -r9 python_requests_layer.zip library
+mkdir python
+pip3 install -t python requests requests_aws4auth
+zip -r9 python_requests_layer.zip python
 ```
 2. Upload the Zip file from Step 1 to an S3 bucket.
 
