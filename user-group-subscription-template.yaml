@@ -349,9 +349,6 @@ Resources:
 
       Timeout: 300
       MemorySize: 128
-      Environment:
-        Variables:
-          ENVIRONMENT: prod
 
   # API Gateway
   ApiGateway:
@@ -371,6 +368,49 @@ Resources:
       ParentId: !GetAtt ApiGateway.RootResourceId
       PathPart: subscription
 
+  # Request Validator for POST method
+  RequestValidator:
+    Type: AWS::ApiGateway::RequestValidator
+    Properties:
+      Name: !Sub ${AWS::StackName}-subscription-validator
+      RestApiId: !Ref ApiGateway
+      ValidateRequestBody: true
+      ValidateRequestParameters: true
+
+  # JSON Schema Model for subscription
+  SubscriptionModel:
+    Type: AWS::ApiGateway::Model
+    Properties:
+      ContentType: application/json
+      RestApiId: !Ref ApiGateway
+      Name: SubscriptionModel
+      Schema: 
+        type: object
+        required:
+          - region
+          - applicationId
+          - assignmentType
+          - assignmentId
+          - subscriptionType
+        properties:
+          region:
+            type: string
+            pattern: "^[a-z]{2}-[a-z]+-\\d{1}$"
+          applicationId:
+            type: string
+          assignmentType:
+            type: string
+            enum:
+              - "USER"
+              - "GROUP"
+          assignmentId:
+            type: string
+          subscriptionType:
+            type: string
+            enum:
+              - "Q_BUSINESS"
+              - "Q_LITE"
+
   # POST Method for adding subscriptions
   SubscriptionPostMethod:
     Type: AWS::ApiGateway::Method
@@ -379,6 +419,11 @@ Resources:
       ResourceId: !Ref SubscriptionResource
       HttpMethod: POST
       AuthorizationType: AWS_IAM
+      RequestValidatorId: !Ref RequestValidator
+      RequestModels:
+        application/json: !Ref SubscriptionModel
+      RequestParameters:
+        method.request.header.Content-Type: true
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
@@ -392,6 +437,12 @@ Resources:
       ResourceId: !Ref SubscriptionResource
       HttpMethod: DELETE
       AuthorizationType: AWS_IAM
+      RequestParameters:
+        method.request.querystring.region: true
+        method.request.querystring.applicationId: true
+        method.request.querystring.assignmentType: true
+        method.request.querystring.assignmentId: true
+        method.request.header.Content-Type: true
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
