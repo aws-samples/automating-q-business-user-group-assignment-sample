@@ -1,7 +1,6 @@
 # Automating Amazon Q Business Subscription Management in AWS IAM Identity Center
 
-Customers often want automation to assign users and groups to an Amazon Q Business application. Currently there are no APIs that support this operation.
-This solution provides an automation mechanism for the operation using the console APIs.
+Customers often want automation to assign users and groups to an Amazon Q Business application. While these operations can be performed through the console interface, organizations need programmatic solutions for managing assignments at scale. This solution provides an automation mechanism using the console APIs, enabling customers to integrate user and group management with their existing identity workflows.
 ## Workflow
 
 ![Addition of Subscription](user-group-assignment-add.png)
@@ -30,7 +29,7 @@ The output from the template will include the API Gateway endpoint. Use the HTTP
 The request body should be a JSON object with the following fields:
 ```json
 {
-    "region": " AWS region (e.g., 'us-east-1')"
+    "region": " AWS region (e.g., us-east-1)"
     "applicationId": "Amazon Q Business Application Id", 
     "assignmentType": "GROUP|USER", 
     "assignmentId": " Group ID or User ID from AWS IAM Identity Center",   
